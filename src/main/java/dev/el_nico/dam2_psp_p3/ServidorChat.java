@@ -18,10 +18,20 @@ public class ServidorChat {
 
     private ServidorChat() {}
 
-    public static void abrir(final int PUERTO) {
+    public void abrir(final int PUERTO) {
         try (ServerSocket s = new ServerSocket(PUERTO)) {
         
-            Socket cliente = s.accept();
+            while (true) {
+                Socket cliente = s.accept();
+                usuarios.add(new Thread() {
+
+                    private BlockingQueue<Mensaje> buffer = new ConcurrentCircularBuffer<>(32);
+                    
+                    
+
+                });
+            }
+            
             DataInputStream outCliente = new DataInputStream(cliente.getInputStream());
             DataOutputStream inputCliente = new DataOutputStream(cliente.getOutputStream());
             String linea;
@@ -35,6 +45,6 @@ public class ServidorChat {
     }
 
     public static void main(String[] args) {
-        ServidorChat.abrir(6969);
+        new ServidorChat().abrir(6969);
     }
 }
