@@ -1,6 +1,7 @@
 package dev.el_nico.dam2_psp_p3;
 
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -12,39 +13,28 @@ public class ServidorChat {
     public final int MAX_USUARIOS = 20;
     public final int MAX_MENSAJES = 100;
 
-    BlockingQueue<Mensaje> historial = new ConcurrentCircularBuffer<>(MAX_MENSAJES);
-    BlockingQueue<Thread> usuarios = new ConcurrentCircularBuffer<>(MAX_USUARIOS);
+    private BlockingQueue<Mensaje> historial = new ConcurrentCircularBuffer<>(MAX_MENSAJES);
+    private BlockingQueue<Thread> usuarios = new ConcurrentCircularBuffer<>(MAX_USUARIOS);
 
-    public ServidorChat(int puerto) {
+    private ServidorChat() {}
 
+    public static void abrir(final int PUERTO) {
         try (ServerSocket s = new ServerSocket(PUERTO)) {
-
-            while (true) {
-                Thread hiloUsuario = new Thread()
-                {
-                    private Socket socket = s.accept();
-
-                    @Override
-                    public void run() {
-                        try {
-                            DataInputStream dis = new DataInputStream(socket.getInputStream());
-                            
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                };
-                
-                usuarios.put(hiloUsuario);
-                hiloUsuario.start();
+        
+            Socket cliente = s.accept();
+            DataInputStream outCliente = new DataInputStream(cliente.getInputStream());
+            DataOutputStream inputCliente = new DataOutputStream(cliente.getOutputStream());
+            String linea;
+            while (!(linea = outCliente.readUTF()).equals("*")) {
+                inputCliente.writeUTF("recibido stirmg: " + linea);
             }
 
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private void atender() {
-
+    public static void main(String[] args) {
+        ServidorChat.abrir(6969);
     }
 }
