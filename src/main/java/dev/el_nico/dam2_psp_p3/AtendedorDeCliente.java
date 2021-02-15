@@ -1,49 +1,77 @@
 package dev.el_nico.dam2_psp_p3;
 
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class AtendedorDeCliente {
+public class AtendedorDeCliente extends Thread {
 
     private final Socket socket;
-    private final BlockingQueue<Mensaje> bufferSalida;
-    private final BlockingQueue<Mensaje> bufferEntrada;
-
-    private Thread recibidorDeMensajes;
-    private Thread enviadorDeMensajes;
+    private final MonitorMensajes monit;
+    private final int indice;
 
     private AtomicBoolean conexionAbierta;
 
-    public AtendedorDeCliente(Socket socket) {
+    public AtendedorDeCliente(Socket socket, MonitorMensajes monit, int indiceEnElMonitor) {
         this.socket = socket;
-        bufferSalida = new ConcurrentCircularBuffer<>(32);
-        bufferEntrada = new ConcurrentCircularBuffer<>(32);
+        this.monit = monit;
+        this.indice = indiceEnElMonitor;
+        conexionAbierta = new AtomicBoolean(true);
+    }
 
+    @Override
+    public void run() {    
         try {
-            recibidorDeMensajes = new Thread() {
-                private DataInputStream inputDelSocket = new DataInputStream(socket.getInputStream());
+            new Thread() {
+                private DataInputStream salidaDelSocket = new DataInputStream(socket.getInputStream());
 
                 @Override
                 public void run() {
                     while (conexionAbierta.get()) {
                         try {
-                            String texto = inputDelSocket.readUTF(), usuario = inputDelSocket.readUTF();
-                            long timestamp = inputDelSocket.readLong();
-                        
-                            bufferEntrada.put(new Mensaje(timestamp, usuario, texto));
+                            String texto = salidaDelSocket.readUTF();
+
+                            if (texto.equals("*")) {
+                                conexionAbierta.set(false);
+                            } else {
+                                monit.put(texto);
+                            }
+                            
                         } catch (InterruptedException | IOException e) {
-                            // TODO Auto-generated catch block
-                            e.printStackTrace();
+                            conexionAbierta.set(false);
                         }
                     }
+                    monit.retirarUsuario(indice);
                 }
-            };
+            }.start();
+
+            DataOutputStream entradaDelSocket = new DataOutputStream(socket.getOutputStream());
+
+            // primero mensajes antiguos
+            for (String m : monit.getHistorial()) {
+                if (conexionAbierta.get()) {
+                    entradaDelSocket.writeUTF(m);
+                } else {
+                    break;
+                }
+            }
+
+            while (conexionAbierta.get()) {
+                // despues uno a uno los que vaya habiendo nuevos
+                try {
+                    String msj = monit.siguiente();
+                    if (conexionAbierta.get()) {
+                        entradaDelSocket.writeUTF(msj);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-
 }

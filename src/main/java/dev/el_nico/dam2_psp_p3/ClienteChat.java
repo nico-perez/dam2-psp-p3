@@ -6,24 +6,50 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ClienteChat {
 
     public static void nuevo(final String IP, final int PUERTO) {
         
+        AtomicBoolean conexionAbierta = new AtomicBoolean(true);
+
+        System.out.print("Nombre de usuario: ");
+        String nombreUsuario;      
+
         try (Socket socketTcp = new Socket(IP, PUERTO); Scanner s = new Scanner(System.in)) {
 
-            // Obtenemos los canales de entrada de datos y de salida
-            DataInputStream outputServidor = new DataInputStream(socketTcp.getInputStream());
+            do {
+                nombreUsuario = s.nextLine();
+            } while(nombreUsuario.isEmpty());
+
+            new Thread() {
+                @Override
+                public void run() {
+                    DataInputStream outputServidor;
+                    try {
+                        outputServidor = new DataInputStream(socketTcp.getInputStream());
+                        while (conexionAbierta.get()) {
+                            String mensajeDelServidor = outputServidor.readUTF();
+                            System.out.println(mensajeDelServidor);
+                        }
+                    } catch (IOException e) {
+                        // conexion cerrada
+                        conexionAbierta.set(false);
+                    }
+                    
+                }  
+            }.start();
+
+            // Obtenemos canale de salid
             DataOutputStream inputServidor = new DataOutputStream(socketTcp.getOutputStream());
 
             // Enviamos un mensaje y esperamos la respuesta del servidor
             String linea;
             while (!(linea = s.nextLine()).equals("*")) {
-                inputServidor.writeUTF(linea);
-                String mensajeDelServidor = outputServidor.readUTF();
-                System.out.println("Recibido mensaje del servidor: " + mensajeDelServidor);
+                inputServidor.writeUTF("[" + nombreUsuario + "]: " + linea);
             }
+            conexionAbierta.set(false);
             
             // cerrar ocnexion
             inputServidor.writeUTF(linea);

@@ -16,17 +16,17 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class ConcurrentCircularBuffer<T> extends AbstractQueue<T> implements BlockingQueue<T> {
 
-    private final Lock LOCK;
-    private final Condition NOT_EMPTY;
-    private final Condition NOT_FULL;
+    protected final Lock LOCK;
+    protected final Condition NOT_EMPTY;
+    protected final Condition NOT_FULL;
 
-    private final int MAX_SIZE;
+    protected final int MAX_SIZE;
 
-    private int currentSize = 0;
-    private int firstOccupied = 0;
-    private int lastFree = 0;
+    protected int currentSize = 0;
+    protected int firstOccupied = 0;
+    protected int lastFree = 0;
 
-    private final Object[] Q;
+    protected final Object[] Q;
 
     @SuppressWarnings("unused")
     private ConcurrentCircularBuffer() {
@@ -56,7 +56,7 @@ public class ConcurrentCircularBuffer<T> extends AbstractQueue<T> implements Blo
      * enqueue -> añade un elemento a la cola.
      * @pre LOCK adquirido && currentSize < MAX_SIZE
      */
-    private void nq(final T e) {
+    protected void nq(final T e) {
         Q[lastFree++] = e;
         if (lastFree == MAX_SIZE) {
             lastFree = 0;
@@ -70,7 +70,7 @@ public class ConcurrentCircularBuffer<T> extends AbstractQueue<T> implements Blo
      * @pre LOCK adquirido && currentSize > 0
      */
     @SuppressWarnings("unchecked")
-    private T dq() {
+    protected T dq() {
         try {
             currentSize--;
             return (T) Q[firstOccupied++];
