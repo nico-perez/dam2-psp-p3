@@ -6,15 +6,15 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class AtendedorDeCliente extends Thread {
+public class AtiendeCliente extends Thread {
 
     private final Socket socket;
-    private final MonitorMensajes monit;
+    private final ComunHilos monit;
     private final int indice;
 
     private AtomicBoolean conexionAbierta;
 
-    public AtendedorDeCliente(Socket socket, MonitorMensajes monit, int indiceEnElMonitor) {
+    public AtiendeCliente(Socket socket, ComunHilos monit, int indiceEnElMonitor) {
         this.socket = socket;
         this.monit = monit;
         this.indice = indiceEnElMonitor;

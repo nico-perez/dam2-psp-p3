@@ -8,7 +8,7 @@ import java.net.UnknownHostException;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class ClienteChat {
+public class AppCliente {
 
     public static void nuevo(final String IP, final int PUERTO) {
         
@@ -23,7 +23,7 @@ public class ClienteChat {
                 nombreUsuario = s.nextLine();
             } while(nombreUsuario.isEmpty());
 
-            new Thread() {
+            new Thread() { // AtiendeServidor
                 @Override
                 public void run() {
                     DataInputStream outputServidor;
@@ -63,7 +63,7 @@ public class ClienteChat {
 
 
     public static void main(String[] args) {
-        ClienteChat.nuevo("localhost", 6969);
+        AppCliente.nuevo("localhost", 6969);
     }
 
 }

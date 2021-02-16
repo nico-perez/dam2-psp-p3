@@ -3,15 +3,15 @@ package dev.el_nico.dam2_psp_p3;
 import java.io.IOException;
 import java.net.ServerSocket;
 
-public class ServidorChat {
+public class AppServidor {
 
     public final int PUERTO = 6969;
-    public final int MAX_USUARIOS = 100;
+    public final int MAX_USUARIOS = 3;
     public final int MAX_MENSAJES = 3829;
 
-    private final MonitorMensajes monit = new MonitorMensajes(MAX_USUARIOS, MAX_MENSAJES);
+    private final ComunHilos monit = new ComunHilos(MAX_USUARIOS, MAX_MENSAJES);
 
-    private ServidorChat() {}
+    private AppServidor() {}
 
     public void abrir(final int PUERTO) {
         System.out.println("Abriendo el servidor...");
@@ -27,6 +27,6 @@ public class ServidorChat {
     }
 
     public static void main(String[] args) {
-        new ServidorChat().abrir(6969);
+        new AppServidor().abrir(6969);
     }
 }

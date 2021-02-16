@@ -2,7 +2,7 @@ package dev.el_nico.dam2_psp_p3;
 
 import java.net.Socket;
 
-public class MonitorMensajes {
+public class ComunHilos {
 
     private MutexArrayMensajes historial;
 
@@ -10,7 +10,7 @@ public class MonitorMensajes {
     private int cantidad = 0;
     private final Object monitorUsuarios = new Object();
 
-    public MonitorMensajes(final int MAX_USUARIOS, final int MAX_MENSAJES) {
+    public ComunHilos(final int MAX_USUARIOS, final int MAX_MENSAJES) {
         historial = new MutexArrayMensajes(MAX_MENSAJES);
         usuarios = new Thread[MAX_USUARIOS];
     }
@@ -29,8 +29,8 @@ public class MonitorMensajes {
 
 	public void nuevoUsuario(Socket s) {
         synchronized (monitorUsuarios) {
-            if (cantidad < usuarios.length - 1) {
-                usuarios[cantidad] = new AtendedorDeCliente(s, this, cantidad);
+            if (cantidad < usuarios.length) {
+                usuarios[cantidad] = new AtiendeCliente(s, this, cantidad);
                 usuarios[cantidad++].start();
                 System.out.println("Se ha unido un usuario, ahora hay " + cantidad);
             }
